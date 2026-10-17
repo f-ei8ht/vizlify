@@ -5,17 +5,22 @@ description = "Vizlify API — the approval-gated money agent for freelance agen
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    "fastapi>=0.115",
-    "pydantic-settings>=2.6",
-    "uvicorn[standard]>=0.32",
+    "alembic>=1.20",
+    "asyncpg>=0.32",
+    "fastapi>=0.143",
+    "pydantic-settings>=2.16",
+    "sqlalchemy[asyncio]>=2.1",
+    "uvicorn[standard]>=0.54",
 ]
 
 [dependency-groups]
 dev = [
-    "httpx>=0.27",
-    "pytest>=8.3",
-    "pytest-asyncio>=0.24",
-    "ruff>=0.7",
+    "aiosqlite>=0.22",
+    "httpx>=0.28",
+    "pytest>=9",
+    "pytest-asyncio>=1.4",
+    "pytest-cov>=7",
+    "ruff>=0.17",
 ]
 
 # Application, not a distributable library.
@@ -33,3 +38,12 @@ select = ["E", "F", "I", "UP", "B"]
 asyncio_mode = "auto"
 pythonpath = ["."]
 testpaths = ["tests"]
+addopts = "-q --cov=app --cov-report=term-missing"
+
+[tool.coverage.run]
+source = ["app"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
