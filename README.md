@@ -6,11 +6,11 @@ Freelance agencies lose hours every month writing invoices, chasing late payers,
 
 Built for the **PayPal AI Hackathon**. Open source under the [MIT License](./LICENSE).
 
-![license](https://img.shields.io/badge/license-MIT-green) ![python](https://img.shields.io/badge/python-3.14-blue) ![next](https://img.shields.io/badge/next.js-16-black) ![bun](https://img.shields.io/badge/bun-1.x-fbf0df?logo=bun&logoColor=black) ![fastapi](https://img.shields.io/badge/fastapi-0.115+-teal)
+![license](https://img.shields.io/badge/license-MIT-green) ![python](https://img.shields.io/badge/python-3.14-blue) ![next](https://img.shields.io/badge/next.js-16-black) ![bun](https://img.shields.io/badge/bun-1.x-fbf0df?logo=bun&logoColor=black) ![fastapi](https://img.shields.io/badge/fastapi-0.143+-teal) ![clerk](https://img.shields.io/badge/auth-clerk-6C47FF)
 
 - **Live demo:** `https://vizlify.space` *(replace)*
 - **Demo video (under 3 min):** `https://youtube.com/...` *(replace)*
-- **Full plan, features and technical reference:** [ROADMAP.md](./ROADMAP.md)
+- **Run it locally:** see [Quick start](#quick-start-about-5-minutes-no-api-keys-needed)
 
 > **Sandbox only.** This version uses the PayPal sandbox. No real money moves.
 
@@ -29,7 +29,7 @@ Built for the **PayPal AI Hackathon**. Open source under the [MIT License](./LIC
 |--------|----|
 | Invoicing, Payouts, Orders, Webhooks (signature-verified), Disputes, Transaction Search for reconciliation | Cerebras (OpenAI-compatible API) with structured outputs and tool calling; an approval-gated agent; AG Studio Agent Framework for natural-language dashboards |
 
-Details: [ROADMAP.md, Part B](./ROADMAP.md#part-b--technical-reference).
+Every action that moves money or contacts a client becomes a proposal in an approval queue; nothing executes until a human confirms it.
 
 ## Sponsor tools
 
@@ -39,18 +39,44 @@ Details: [ROADMAP.md, Part B](./ROADMAP.md#part-b--technical-reference).
 | **APIMatic** | PayPal Context Plugin used to build the PayPal integration; see `docs/apimatic.md` |
 | **Render** | Hosting, Postgres, Cron Job, and Render Workflows for parallel AI tasks; see `docs/render.md` |
 
+## Authentication
+
+Accounts are handled by **Clerk** (sign-in UI + session tokens). The Next.js app signs the user in and attaches a short-lived session token as a `Bearer` header on every API call; the FastAPI backend verifies it locally against Clerk's public key (`clerk-backend-api`, no per-request call to Clerk) and maps the Clerk user to the local `users` row, matching by email and creating the row on first sign-in.
+
+For local runs and for judges, the whole app still works with **no Clerk keys**. `AUTH_MODE` picks the strategy:
+
+| Mode | Used for | Clerk keys | Sign-in |
+|------|----------|-----------|---------|
+| `dev` | local development, judges | not needed | the seeded demo account |
+| `clerk` | hosted demo, production | `CLERK_*` | Clerk's hosted sign-in |
+
+`dev` is the default and only ever allowed when `APP_ENV != production`; it is refused (fail-closed) in production.
+
+Backend env for Clerk mode:
+
+```env
+AUTH_MODE=clerk
+CLERK_SECRET_KEY=sk_test_...
+CLERK_JWT_KEY=-----BEGIN PUBLIC KEY-----...-----END PUBLIC KEY-----
+CLERK_AUTHORIZED_PARTIES=http://localhost:3000,https://vizlify.space
+```
+
+For `AUTH_MODE=dev` set `DEV_USER_EMAIL` to the demo account email. All of these values come from the environment; nothing is defaulted in code.
+
+Frontend env: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, and the sign-in/up URLs.
+
 ## Quick start (about 5 minutes, no API keys needed)
 
 Requires Docker.
 
 ```bash
 git clone https://github.com/<you>/vizlify.git && cd vizlify
-cp backend/.env.example backend/.env       # LLM_MODE=mock works without any key
+cp backend/.env.example backend/.env       # AUTH_MODE=dev and LLM_MODE=mock both work without any key
 docker compose up --build -d
 docker compose exec api python -m app.scripts.seed   # creates the demo agency and demo login
 ```
 
-Then open http://localhost:3000 and sign in with the demo account in the judge guide below.
+Then open http://localhost:3000 and sign in with the demo account in the judge guide below. Locally the app runs in `AUTH_MODE=dev`, so no Clerk, PayPal or LLM keys are needed.
 
 ## Judge guide
 
@@ -58,22 +84,50 @@ The hosted demo runs on a free-tier host, so the **first request after idle can 
 
 | Item | Value |
 |------|-------|
-| Demo login | `demo@vizlify.space` / `<password>` *(replace)* |
+| Authentication | The hosted demo signs in through Clerk. A local run uses `AUTH_MODE=dev` and needs no Clerk keys |
+| Demo login (local, `AUTH_MODE=dev`) | `demo@vizlify.space` (no password; set by `DEV_USER_EMAIL`) |
+| Hosted Clerk demo account | `<clerk demo email>` / `<password>` *(replace)* |
 | PayPal sandbox payer (to pay an invoice) | `<sandbox personal email>` / `<password>` *(replace)* |
 | LLM | `LLM_MODE=mock` is deterministic and needs no key. Set `LLM_MODE=live` with a Cerebras key for the real agent |
 | Walkthrough | 1) Paste the sample brief. 2) Approve the proposed invoice. 3) Pay it as the sandbox payer. 4) Approve the payout split. 5) Click "time travel" to see the nudge-bot. See `docs/judge-guide.md` |
 
 ## Tech stack
 
-Next.js 16 (App Router, TypeScript, Tailwind, bun), AG Studio, FastAPI (Python 3.14), SQLAlchemy 2 and Alembic, PostgreSQL 16, Cerebras, PayPal REST APIs, Render (Workflows, Cron, Postgres), Docker, GitHub Actions.
+Next.js 16 (App Router, TypeScript, Tailwind, bun), Clerk (authentication), AG Studio, FastAPI (Python 3.14), SQLAlchemy 2 and Alembic, PostgreSQL 16, Cerebras, PayPal REST APIs, Render (Workflows, Cron, Postgres), Docker, GitHub Actions.
 
 ## Project status
 
-The repo currently holds the Phase 0 scaffold: the monorepo layout, a FastAPI app shell that serves `/health`, a Next.js 16 app shell (shadcn/ui, Tailwind v4, dark mode), Docker Compose and CI. The build order and remaining work are tracked in [ROADMAP.md](./ROADMAP.md). AG Studio is integrated later behind a client-only feature flag and needs its own trial key; until then the dashboard renders without it.
+The repo currently holds the backend data layer and the app shells: the monorepo layout, a FastAPI app with SQLAlchemy models and Alembic migrations for the full data model (users, clients, projects, milestones, team, invoices, payouts, approvals, audit log, webhooks, chat) plus a demo seed script, and a Next.js 16 app shell (shadcn/ui, Tailwind v4, dark mode). Auth is done with Clerk on the frontend and verified on the backend, with a gated `dev` mode so the app runs locally without keys. AG Studio is integrated later behind a client-only feature flag and needs its own trial key; until then the dashboard renders without it.
 
 ## Development
 
-See [ROADMAP.md, section B12](./ROADMAP.md#b12-local-development-setup) for local setup, environment variables, webhook testing, tests and deployment.
+Requires Docker. The whole stack is one command: PostgreSQL 16, the FastAPI API, and the Next.js web app.
+
+```bash
+cp backend/.env.example backend/.env
+docker compose up --build -d
+docker compose exec api python -m app.scripts.seed
+```
+
+Backend work (inside `backend/`):
+
+```bash
+uv sync
+uv run alembic upgrade head                        # apply migrations
+uv run alembic revision --autogenerate -m "change" # create a migration
+uv run uvicorn app.main:app --reload --port 8000   # http://localhost:8000/docs
+uv run ruff check . && uv run pytest               # lint + tests
+```
+
+With the API running, its schema is at `http://localhost:8000/openapi.json`. PayPal webhooks cannot reach `localhost`, so expose the API with `cloudflared tunnel --url http://localhost:8000` (or `ngrok http 8000`) while testing them.
+
+Frontend work (inside `frontend/`):
+
+```bash
+bun install
+bun run dev            # http://localhost:3000
+bun run lint && bun run typecheck
+```
 
 ## Licensing
 

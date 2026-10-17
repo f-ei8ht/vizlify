@@ -21,9 +21,12 @@ class User(TimestampMixin, Base):
     __tablename__ = "users"
 
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    clerk_user_id: Mapped[str | None] = mapped_column(
+        String(255), unique=True, index=True, default=None
+    )
     email: Mapped[str] = mapped_column(String(320), unique=True, index=True)
-    password_hash: Mapped[str] = mapped_column(String(255))
-    business_name: Mapped[str] = mapped_column(String(255))
+    password_hash: Mapped[str | None] = mapped_column(String(255), default=None)
+    business_name: Mapped[str | None] = mapped_column(String(255), default=None)
     paypal_email: Mapped[str | None] = mapped_column(String(320), default=None)
 
     clients: Mapped[list[Client]] = relationship(back_populates="owner")

@@ -5,9 +5,16 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 import app.models  # noqa: F401  # registers tables on Base.metadata
+from app.core.config import settings
 from app.db.base import Base
 from app.db.session import get_db
 from app.main import app
+from app.scripts.seed import seed
+
+
+@pytest.fixture(autouse=True)
+def _local_auth_mode(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(settings, "AUTH_MODE", "dev")
 
 
 @pytest.fixture
@@ -41,3 +48,11 @@ async def client(
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+async def seeded_client(
+    client: AsyncClient, db_session: AsyncSession
+) -> AsyncIterator[AsyncClient]:
+    await seed(db_session)
+    yield client

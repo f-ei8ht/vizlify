@@ -1,0 +1,23 @@
+{
+  "business_name": "Northwind Studio",
+  "paypal_email": "northwind-facilitator@business.example",
+  "clients": [
+    { "name": "Acme Co", "email": "billing@acme.example", "tone_preference": "friendly" },
+    { "name": "Globex Corporation", "email": "accounts@globex.example", "tone_preference": "formal" }
+  ],
+  "project": {
+    "name": "Acme website redesign",
+    "currency": "USD",
+    "client_name": "Acme Co",
+    "milestones": [
+      { "title": "Discovery & wireframes", "amount": "2500.00", "due_in_days": 14 },
+      { "title": "Visual design", "amount": "4000.00", "due_in_days": 35 },
+      { "title": "Build & launch", "amount": "6000.00", "due_in_days": 70 }
+    ],
+    "team": [
+      { "name": "Rida Khan", "paypal_email": "rida@northwind.example", "share_percent": "40.00" },
+      { "name": "Maya Patel", "paypal_email": "maya@northwind.example", "share_percent": "35.00" },
+      { "name": "Sam Rivera", "paypal_email": "sam@northwind.example", "share_percent": "25.00" }
+    ]
+  }
+}

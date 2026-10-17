@@ -1,7 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.clients import router as clients_router
+from app.api.me import router as account_router
+from app.api.milestones import router as milestones_router
+from app.api.projects import router as projects_router
+from app.api.team import router as team_router
 from app.core.config import settings
+from app.core.errors import register_exception_handlers
+from app.schemas.response import ApiResponse, success
 
 
 def create_app() -> FastAPI:
@@ -19,14 +26,21 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    register_exception_handlers(app)
+
     @app.get("/", tags=["system"])
-    async def root() -> dict[str, str]:
-        return {"name": "Vizlify API", "version": "0.1.0", "docs": "/docs"}
+    async def root() -> ApiResponse[dict[str, str]]:
+        return success({"name": "Vizlify API", "version": "0.1.0", "docs": "/docs"})
 
     @app.get("/health", tags=["system"])
-    async def health() -> dict[str, str]:
-        return {"status": "ok"}
+    async def health() -> ApiResponse[dict[str, str]]:
+        return success({"status": "ok"})
 
+    app.include_router(account_router)
+    app.include_router(clients_router)
+    app.include_router(projects_router)
+    app.include_router(milestones_router)
+    app.include_router(team_router)
     return app
 
 
