@@ -1,0 +1,21 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Container plumbing
+Dockerfile*
+.dockerignore
+
+# Not needed in the image (README.md is kept: pyproject reads it)
+tests/
+*.md
+!README.md

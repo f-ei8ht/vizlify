@@ -1,0 +1,18 @@
+node_modules/
+.next/
+out/
+build/
+dist/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Container plumbing
+Dockerfile*
+.dockerignore
+
+# Not needed in the image
+.git/
+*.md

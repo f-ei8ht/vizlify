@@ -1,0 +1,75 @@
+# Vizlify local stack. One command: docker compose up --build
+#
+#   db   PostgreSQL 16
+#   api  FastAPI (uv + Python 3.14)
+#   web  Next.js (bun)
+#
+# Optional: copy backend/.env.example to backend/.env for PayPal/LLM keys.
+# Without it the api still starts; the app runs in mock mode.
+
+name: vizlify
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-vizlify}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vizlify}
+      POSTGRES_DB: ${POSTGRES_DB:-vizlify}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vizlify} -d ${POSTGRES_DB:-vizlify}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file:
+      - path: ./backend/.env
+        required: false
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-vizlify}:${POSTGRES_PASSWORD:-vizlify}@db:5432/${POSTGRES_DB:-vizlify}
+      CORS_ORIGINS: http://localhost:3000
+      FRONTEND_URL: http://localhost:3000
+      JOBS_MODE: inline
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status == 200 else 1)\"",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+    environment:
+      NODE_ENV: production
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  db-data:
