@@ -2,6 +2,7 @@ import { ClerkProvider, Show, SignInButton, SignUpButton, UserButton } from "@cl
 import { Geist_Mono, Inter } from "next/font/google"
 
 import "./globals.css"
+import { QueryProvider } from "@/components/providers/query-provider"
 import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@/lib/utils"
 
@@ -26,20 +27,22 @@ export default function RootLayout({
       <body>
         <ClerkProvider>
           <ThemeProvider>
-            <header className="flex h-16 items-center justify-end gap-4 p-4">
-              <Show when="signed-out">
-                <SignInButton />
-                <SignUpButton>
-                  <button className="h-10 cursor-pointer rounded-full bg-purple-700 px-5 text-sm font-medium text-white sm:h-12 sm:text-base">
-                    Sign up
-                  </button>
-                </SignUpButton>
-              </Show>
-              <Show when="signed-in">
-                <UserButton />
-              </Show>
-            </header>
-            {children}
+            <QueryProvider>
+              <header className="flex h-16 items-center justify-end gap-4 p-4">
+                <Show when="signed-out">
+                  <SignInButton />
+                  <SignUpButton>
+                    <button className="h-10 cursor-pointer rounded-full bg-purple-700 px-5 text-sm font-medium text-white sm:h-12 sm:text-base">
+                      Sign up
+                    </button>
+                  </SignUpButton>
+                </Show>
+                <Show when="signed-in">
+                  <UserButton />
+                </Show>
+              </header>
+              {children}
+            </QueryProvider>
           </ThemeProvider>
         </ClerkProvider>
       </body>
