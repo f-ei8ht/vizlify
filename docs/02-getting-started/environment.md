@@ -41,6 +41,8 @@ flowchart LR
 | `PAYPAL_WEBHOOK_ID` | no | — | Webhook id used by the verifier (planned) |
 | `PAYPAL_TIMEOUT_SECONDS` | no | `15` | Per-request timeout |
 | `PAYPAL_MAX_RETRIES` | no | `2` | Extra attempts for retryable failures |
+| `PAYOUT_MAX_PER_ACTION` | no | `10000.00` | Spend cap for a single payout |
+| `PAYOUT_MAX_PER_DAY` | no | `50000.00` | Spend cap across a UTC day |
 | `LLM_MODE` | yes | — | `mock` or `live` (LLM not implemented yet) |
 | `DEMO_MODE` | yes | — | Enables demo-only affordances (planned) |
 | `JOBS_MODE` | yes | — | `inline` today; Workflows later |
@@ -74,6 +76,7 @@ should not start in an ambiguous state.
 | `PAYPAL_MODE` ≠ `mock` without credentials → refuse | No silent unauthenticated calls |
 | `PAYPAL_TIMEOUT_SECONDS <= 0` → refuse | Avoid instant timeouts |
 | `PAYPAL_MAX_RETRIES < 0` → refuse | Avoid meaningless retry config |
+| Payout caps `<= 0` → refuse | A zero cap silently blocks every payout |
 
 ## Local `.env` example
 
@@ -88,6 +91,8 @@ AUTH_MODE=dev
 DEV_USER_EMAIL=demo@vizlify.space
 
 PAYPAL_MODE=mock
+PAYOUT_MAX_PER_ACTION=10000.00
+PAYOUT_MAX_PER_DAY=50000.00
 LLM_MODE=mock
 DEMO_MODE=true
 JOBS_MODE=inline

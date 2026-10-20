@@ -103,29 +103,60 @@ Validation:
 | `share_percent` | `> 0`, `<= 100`, 2 decimals |
 | project total | sum of shares `<= 100`, otherwise `409` |
 
-## Planned money routes
+## Approvals
 
-| Method | Path | Body | Notes |
-|--------|------|------|-------|
-| `POST` | `/milestones/{id}/invoice` | — | Creates an invoice proposal |
-| `GET` | `/invoices` | — | List with live status |
-| `GET` | `/invoices/{id}` | — | Detail plus PayPal link |
-| `POST` | `/invoices/{id}/send` | — | Executes an approved action |
-| `POST` | `/invoices/{id}/remind` | `tone?` | Sends via PayPal |
-| `POST` | `/invoices/{id}/cancel` | `reason?` | Cancels locally and at PayPal |
-| `POST` | `/invoices/{id}/refresh` | — | Pulls live state from PayPal |
-| `GET` | `/payouts` | — | List |
-| `GET` | `/payouts/{id}` | — | Batch and item statuses |
-| `POST` | `/payouts/{id}/execute` | — | Executes an approved payout |
-| `POST` | `/webhooks/paypal` | PayPal event | Signature-verified, idempotent |
+| Method | Path | Status | Body |
+|--------|------|--------|------|
+| `GET` | `/actions` | Implemented | Optional `?status=pending` |
+| `GET` | `/actions/{id}` | Implemented | — |
+| `POST` | `/actions/{id}/approve` | Implemented | — (`409` if already decided) |
+| `POST` | `/actions/{id}/reject` | Implemented | `reason` |
+
+Approving runs the executor once. The response carries `status: executed` and
+a `result` with the PayPal ids. A failed execution leaves the proposal `failed`
+and returns the underlying error (`409` for business conflicts, `502` for
+PayPal failures).
+
+## Invoices
+
+| Method | Path | Status | Body |
+|--------|------|--------|------|
+| `POST` | `/milestones/{id}/invoice` | Implemented | — (creates a proposal) |
+| `GET` | `/invoices` | Implemented | — |
+| `GET` | `/invoices/{id}` | Implemented | — |
+| `POST` | `/invoices/{id}/remind` | Implemented | — (creates a proposal) |
+| `POST` | `/invoices/{id}/cancel` | Implemented | — (creates a proposal) |
+| `POST` | `/invoices/{id}/payout` | Implemented | — (creates a proposal) |
+| `POST` | `/invoices/{id}/refresh` | Implemented | — (pulls live status) |
+
+Marking a milestone `done` creates the same invoice proposal automatically.
+Creation and sending happen in one approved action.
+
+## Payouts
+
+| Method | Path | Status | Body |
+|--------|------|--------|------|
+| `GET` | `/payouts` | Implemented | — |
+| `GET` | `/payouts/{id}` | Implemented | — |
+| `POST` | `/payouts/{id}/execute` | Implemented | — (creates a proposal) |
+
+A payout is prepared from a paid invoice (proposal, then approval). Execution is
+a second proposal, enforced against the per-action and per-day spend caps.
+
+## Webhooks
+
+| Method | Path | Status | Body |
+|--------|------|--------|------|
+| `POST` | `/webhooks/paypal` | Implemented | PayPal event |
+
+No auth header. In `sandbox`/`live` the signature is verified with
+`PAYPAL_WEBHOOK_ID`; `mock` skips it. Events dedupe on PayPal's event id and
+return `{"status":"processed"}` or `{"status":"duplicate"}`.
 
 ## Planned agent routes
 
 | Method | Path | Purpose |
 |--------|------|---------|
-| `GET` | `/actions` | Approval queue with rationale |
-| `POST` | `/actions/{id}/approve` | Idempotent; `409` on double approve |
-| `POST` | `/actions/{id}/reject` | Requires a reason |
 | `POST` | `/briefs` | Start scope extraction |
 | `GET` | `/briefs/{id}` | Poll status and result |
 | `POST` | `/chat` | Tool-calling chat; writes become proposals |

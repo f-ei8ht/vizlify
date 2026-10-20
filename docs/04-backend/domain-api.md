@@ -125,18 +125,26 @@ flowchart TD
 Cross-owner access is indistinguishable from a missing row. Tests create a
 second user and assert their rows never appear.
 
+## Money routes
+
+The money loop is implemented on top of these domain routes:
+
+- [`/actions`](../08-reference/api-endpoints.md#approvals) — the approval queue and executor
+- [`/invoices`](../08-reference/api-endpoints.md#invoices) — create/send, remind, cancel, refresh
+- [`/payouts`](../08-reference/api-endpoints.md#payouts) — split preparation and batch execution
+- [`/webhooks/paypal`](../08-reference/api-endpoints.md#webhooks) — verified, deduped events
+
+See [API endpoints](../08-reference/api-endpoints.md) for the complete route
+inventory.
+
 ## What is missing
 
 | Missing route group | Depends on |
 |---------------------|------------|
-| `/invoices`, `/invoices/{id}/send|remind|cancel` | PayPal invoicing service |
-| `/payouts`, `/payouts/{id}` | Split calculation and Payouts API |
-| `/actions`, `/actions/{id}/approve|reject` | Executor and audit log |
-| `/webhooks/paypal` | Signature verifier and event store |
 | `/briefs`, `/chat` | LLM client |
 | `/analytics` | Dashboard widgets |
+| `/demo/time-travel`, `/demo/reset` | Demo controls |
 
-See [API endpoints](../08-reference/api-endpoints.md) for the complete route
-inventory, including planned routes marked as such.
+Next: [Database](./database.md) →
 
 Next: [Database](./database.md) →

@@ -1,10 +1,9 @@
 # Data model
 
-> [Handbook index](../README.md) · [Part 3](./README.md) · **Status: Implemented (schema), Scaffolded (billing and approvals)**
+> [Handbook index](../README.md) · [Part 3](./README.md) · **Status: Implemented**
 
-All tables below exist in the database today via the initial Alembic migration.
-Having a table is not the same as having a feature: invoice, payout and approval
-**routes** are still planned.
+All tables below exist in the database, and the invoice, payout, approval and
+webhook **routes** are implemented. The UI on top is still being built.
 
 ## Entity relationships
 
@@ -85,6 +84,7 @@ erDiagram
         uuid id PK
         uuid payout_id FK
         uuid team_member_id FK
+        string paypal_item_id
         numeric amount
         enum status
     }
@@ -192,13 +192,14 @@ trail.
 
 ## Migrations
 
-Three migrations exist:
+Four migrations exist:
 
 | Revision | Change |
 |----------|--------|
 | `281c60b543e0` | Initial schema: all tables |
 | `77a59e157cd9` | Add `users.clerk_user_id` |
 | `a1dc76bf447b` | Make `users.business_name` nullable |
+| `c3f1a9d2b7e4` | Add `payout_items.paypal_item_id` |
 
 Never edit an applied migration. Add a new one (`alembic revision
 --autogenerate -m "…"`) and review the generated file before committing.

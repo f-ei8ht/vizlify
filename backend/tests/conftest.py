@@ -9,6 +9,9 @@ from app.core.config import settings
 from app.db.base import Base
 from app.db.session import get_db
 from app.main import app
+from app.paypal import build_mock_transport
+from app.paypal.client import PayPalClient, PayPalConfig
+from app.paypal.deps import get_paypal
 from app.scripts.seed import seed
 
 
@@ -36,14 +39,23 @@ async def db_session(
 
 
 @pytest.fixture
+async def paypal_client() -> AsyncIterator[PayPalClient]:
+    client = PayPalClient(PayPalConfig.mock(), transport=build_mock_transport())
+    yield client
+    await client.aclose()
+
+
+@pytest.fixture
 async def client(
     session_factory: async_sessionmaker[AsyncSession],
+    paypal_client: PayPalClient,
 ) -> AsyncIterator[AsyncClient]:
     async def override_get_db() -> AsyncIterator[AsyncSession]:
         async with session_factory() as session:
             yield session
 
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_paypal] = lambda: paypal_client
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac

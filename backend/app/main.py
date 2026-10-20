@@ -4,11 +4,15 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.actions import router as actions_router
 from app.api.clients import router as clients_router
+from app.api.invoices import router as invoices_router
 from app.api.me import router as account_router
 from app.api.milestones import router as milestones_router
+from app.api.payouts import router as payouts_router
 from app.api.projects import router as projects_router
 from app.api.team import router as team_router
+from app.api.webhooks import router as webhooks_router
 from app.core.config import settings
 from app.core.errors import register_exception_handlers
 from app.paypal import build_client
@@ -55,6 +59,10 @@ def create_app() -> FastAPI:
     app.include_router(projects_router)
     app.include_router(milestones_router)
     app.include_router(team_router)
+    app.include_router(actions_router)
+    app.include_router(invoices_router)
+    app.include_router(payouts_router)
+    app.include_router(webhooks_router)
     return app
 
 

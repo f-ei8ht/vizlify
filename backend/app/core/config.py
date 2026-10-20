@@ -1,3 +1,4 @@
+from decimal import Decimal
 from functools import lru_cache
 from typing import Literal
 
@@ -29,6 +30,10 @@ class Settings(BaseSettings):
     PAYPAL_WEBHOOK_ID: str | None = None
     PAYPAL_TIMEOUT_SECONDS: float = 15.0
     PAYPAL_MAX_RETRIES: int = 2
+
+    # Spend caps for payouts, in the project currency.
+    PAYOUT_MAX_PER_ACTION: Decimal = Decimal("10000.00")
+    PAYOUT_MAX_PER_DAY: Decimal = Decimal("50000.00")
 
     LLM_MODE: str
     DEMO_MODE: bool
@@ -76,6 +81,8 @@ class Settings(BaseSettings):
             raise ValueError("PAYPAL_TIMEOUT_SECONDS must be greater than zero.")
         if self.PAYPAL_MAX_RETRIES < 0:
             raise ValueError("PAYPAL_MAX_RETRIES cannot be negative.")
+        if self.PAYOUT_MAX_PER_ACTION <= 0 or self.PAYOUT_MAX_PER_DAY <= 0:
+            raise ValueError("Payout spend caps must be greater than zero.")
         return self
 
     @staticmethod

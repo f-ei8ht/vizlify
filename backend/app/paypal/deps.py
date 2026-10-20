@@ -1,4 +1,6 @@
-from fastapi import Request
+from typing import Annotated
+
+from fastapi import Depends, Request
 
 from app.core.config import settings
 from app.paypal import build_client
@@ -12,3 +14,6 @@ def get_paypal(request: Request) -> PayPalClient:
         client = build_client(settings)
         request.app.state.paypal = client
     return client
+
+
+PayPalDep = Annotated[PayPalClient, Depends(get_paypal)]

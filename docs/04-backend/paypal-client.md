@@ -1,6 +1,6 @@
 # PayPal client
 
-> [Handbook index](../README.md) · [Part 4](./README.md) · **Status: Implemented (transport), Planned (invoice and payout routes)**
+> [Handbook index](../README.md) · [Part 4](./README.md) · **Status: Implemented**
 
 Vizlify talks to PayPal through a small async HTTP client in
 `backend/app/paypal/`. It deliberately does not use a generated server SDK: the
@@ -16,6 +16,9 @@ awkward to mock. See
 | `errors.py` | PayPal failures mapped to the API envelope |
 | `mock.py` | In-process transport used when `PAYPAL_MODE=mock` |
 | `deps.py` | FastAPI dependency exposing the process-wide client |
+| `invoicing.py` | Invoicing v2: number, draft, send, remind, cancel, get |
+| `payouts.py` | Payouts v1: batch creation |
+| `webhooks.py` | Signature verification via Notifications v1 |
 
 ## Modes
 

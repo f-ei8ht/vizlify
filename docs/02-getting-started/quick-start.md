@@ -65,9 +65,9 @@ $12,500 website redesign with three milestones, and three freelancers splitting
 Go to http://localhost:3000. In `AUTH_MODE=dev` the API resolves the seeded
 user automatically, so there is no password and no sign-in step.
 
-> The frontend is still a shell: it renders the starter page and the providers.
-> The API layer and query hooks are ready, but the dashboard screens are the
-> next frontend milestone. See [Project status](../09-project/status-and-roadmap.md).
+> The home page redirects to `/dashboard`, the Money Board: approval queue,
+> invoices and payouts. Approve a proposal there to run it. More screens are
+> tracked in [Project status](../09-project/status-and-roadmap.md).
 
 ## 5. Explore the API
 

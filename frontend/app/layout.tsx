@@ -1,8 +1,9 @@
-import { ClerkProvider, Show, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs"
+import { ClerkProvider } from "@clerk/nextjs"
 import { Geist_Mono, Inter } from "next/font/google"
 
 import "./globals.css"
 import { QueryProvider } from "@/components/providers/query-provider"
+import { SiteHeader } from "@/components/site-header"
 import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@/lib/utils"
 
@@ -18,6 +19,18 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+  const clerkEnabled = Boolean(publishableKey)
+
+  const content = (
+    <ThemeProvider>
+      <QueryProvider>
+        <SiteHeader clerkEnabled={clerkEnabled} />
+        {children}
+      </QueryProvider>
+    </ThemeProvider>
+  )
+
   return (
     <html
       lang="en"
@@ -25,26 +38,11 @@ export default function RootLayout({
       className={cn("antialiased", fontMono.variable, "font-sans", inter.variable)}
     >
       <body>
-        <ClerkProvider>
-          <ThemeProvider>
-            <QueryProvider>
-              <header className="flex h-16 items-center justify-end gap-4 p-4">
-                <Show when="signed-out">
-                  <SignInButton />
-                  <SignUpButton>
-                    <button className="h-10 cursor-pointer rounded-full bg-purple-700 px-5 text-sm font-medium text-white sm:h-12 sm:text-base">
-                      Sign up
-                    </button>
-                  </SignUpButton>
-                </Show>
-                <Show when="signed-in">
-                  <UserButton />
-                </Show>
-              </header>
-              {children}
-            </QueryProvider>
-          </ThemeProvider>
-        </ClerkProvider>
+        {clerkEnabled ? (
+          <ClerkProvider publishableKey={publishableKey}>{content}</ClerkProvider>
+        ) : (
+          content
+        )}
       </body>
     </html>
   )

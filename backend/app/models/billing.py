@@ -69,6 +69,7 @@ class PayoutItem(TimestampMixin, Base):
     team_member_id: Mapped[UUID] = mapped_column(
         ForeignKey("team_members.id", ondelete="CASCADE"), index=True
     )
+    paypal_item_id: Mapped[str | None] = mapped_column(String(255), default=None, index=True)
     amount: Mapped[Decimal] = mapped_column(MONEY)
     status: Mapped[PayoutItemStatus] = mapped_column(
         sql_enum(PayoutItemStatus), default=PayoutItemStatus.PENDING

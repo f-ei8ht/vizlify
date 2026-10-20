@@ -70,17 +70,25 @@ the demo user. The frontend does not need a separate dev path.
 - Pressing **`d`** toggles the theme, unless focus is in an input, textarea,
   select or content-editable element.
 
+## What exists now
+
+- `/dashboard` — the Money Board with approvals, invoices and payouts.
+- `/` redirects to `/dashboard`.
+- The sandbox banner is on the dashboard.
+- Clerk is optional: without `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` the app renders
+  in demo mode, the backend ignores the token, and the header shows
+  "Demo mode · no sign-in".
+
 ## What the shell does not have yet
 
-- Real routes: `(auth)`, dashboard, clients, projects, invoices, approvals,
-  chat.
+- Client, project and invoice detail routes.
 - A sidebar or navigation.
-- The sandbox banner ("no real money") required on every page.
 - Error boundaries and a 404 page.
+- The sandbox banner on routes other than the dashboard.
 
 These are tracked in
-[Project status](../09-project/status-and-roadmap.md). The shell was built
-first so every screen inherits auth, theme and caching without repeating
-setup.
+[Project status](../09-project/status-and-roadmap.md) and
+[`TODO.md`](../../TODO.md). The shell was built first so every screen inherits
+auth, theme and caching without repeating setup.
 
 Next: [API client](./api-client.md) →

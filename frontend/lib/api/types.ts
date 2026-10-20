@@ -102,3 +102,67 @@ export interface TeamMemberUpdateInput {
   paypal_email?: string
   share_percent?: string
 }
+
+export type InvoiceStatus =
+  | "draft"
+  | "sent"
+  | "paid"
+  | "partially_paid"
+  | "cancelled"
+  | "refunded"
+
+export interface Invoice {
+  id: string
+  milestone_id: string
+  paypal_invoice_id: string | null
+  number: string | null
+  amount: Money
+  currency: string
+  status: InvoiceStatus
+  due_date: string | null
+  paid_at: string | null
+}
+
+export type PayoutStatus = "pending" | "success" | "denied" | "unclaimed" | "failed"
+
+export interface PayoutItem {
+  id: string
+  team_member_id: string
+  paypal_item_id: string | null
+  amount: Money
+  status: PayoutStatus
+}
+
+export interface Payout {
+  id: string
+  invoice_id: string
+  paypal_batch_id: string | null
+  status: PayoutStatus
+  total: Money
+  currency: string
+  created_at: string
+  items: PayoutItem[]
+}
+
+export type ActionKind =
+  | "create_invoice"
+  | "send_invoice"
+  | "send_reminder"
+  | "cancel_invoice"
+  | "prepare_payout"
+  | "execute_payout"
+  | "draft_dispute_response"
+
+export type ActionStatus = "pending" | "executed" | "failed" | "rejected" | "expired"
+
+export interface Action {
+  id: string
+  kind: ActionKind
+  status: ActionStatus
+  payload: Record<string, unknown>
+  rationale: string | null
+  result: Record<string, unknown> | null
+  error: string | null
+  created_at: string
+  updated_at: string
+}

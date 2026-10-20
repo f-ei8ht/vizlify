@@ -19,20 +19,25 @@ conservative: a feature is only **Implemented** when code and tests exist.
 | Full database schema | Alembic | All 12 tables from the roadmap data model |
 | Demo agency seed | `python -m app.scripts.seed` | Idempotent, validated JSON fixture |
 | PayPal transport | `backend/app/paypal/` | OAuth cache, retries, idempotency, mock mode, 33 tests |
-| Frontend API layer | `frontend/lib/api/` | Envelope-aware client, typed errors, query hooks |
-| Frontend providers | `frontend/components/providers/` | Clerk, theme, TanStack Query, API client |
+| Approval queue and executor | `/actions` | Propose, approve, reject, `409`, audit, spend caps, 8 tests |
+| Invoicing | `/invoices` | Create/send, list/detail, remind, cancel, refresh, 6 tests |
+| Webhooks | `/webhooks/paypal` | Signature verification, dedupe, invoice and payout handlers, 4 tests |
+| Payouts and splits | `/payouts` | Largest-remainder split, prepare, execute, 10 tests |
+| Frontend API layer | `frontend/lib/api/` | Envelope-aware client, typed errors, CRUD + money query hooks |
+| Frontend providers | `frontend/components/providers/` | Optional Clerk, theme, TanStack Query, API client |
+| Money Board screen | `/dashboard` | Approvals, invoices, payouts, sandbox banner |
 
-The backend suite is **78 tests** with roughly **96% statement coverage**
-(`cd backend && uv run pytest`).
+The backend suite is **108 tests** with roughly **91% statement coverage**
+(`cd backend && uv run pytest`). The full mock money loop was verified against
+Docker on 2026-10-21.
 
 ## What is scaffolded
 
 | Area | What exists | What is missing |
 |------|-------------|-----------------|
-| Next.js UI | App Router shell, layout, providers, buttons, states | Real screens: dashboard, clients, projects, invoices, approvals, chat |
+| Next.js UI | App Router shell, layout, providers, buttons, states, money query hooks | Screens: dashboard, approvals, invoices, payouts |
 | Demo mode | Seed script, `DEMO_MODE` flag, `LLM_MODE=mock` | Time travel, reset button, judge walkthrough |
-| Safety core | `pending_actions` and `audit_log` tables | Proposal service, approve/reject endpoints, executor, spend caps |
-| Billing data | `invoices`, `payouts`, `payout_items` tables and enums | Endpoints, UI, webhook handlers, split calculation |
+| Sandbox verification | Mock PayPal path fully tested | Real keys, tunnel and a paid sandbox invoice |
 | API docs | FastAPI's `/docs` and `/openapi.json` | A generated typed frontend SDK |
 
 ## What is planned
@@ -45,10 +50,10 @@ authoritative, day-by-day plan is in [ROADMAP.md](../../ROADMAP.md).
 | E1 | Platform foundation | **Implemented** | Compose, config, auth, errors, seed |
 | E2 | Clients, projects, milestones, team | **Implemented** | Payment-behaviour score and timelines are not |
 | E3 | AI scope from a brief | **Planned** | Needs LLM client, structured output, eval harness |
-| E4 | Invoicing | **Planned** | Transport ready; no invoice service or routes |
-| E5 | Payments and webhooks | **Planned** | Signature verification and event store are next |
-| E6 | Payouts and splits | **Planned** | Split maths, batches, item statuses |
-| E7 | Approval queue and executor | **Planned** | The safety core; tables already exist |
+| E4 | Invoicing | **Implemented** | Create/send, list/detail, remind, cancel, refresh; UI missing |
+| E5 | Payments and webhooks | **Implemented** | Signature verification, dedupe, invoice/payout handlers |
+| E6 | Payouts and splits | **Implemented** | Largest-remainder split, batch, item statuses; freelancer view missing |
+| E7 | Approval queue and executor | **Implemented** | Proposals, `409`, audit, spend caps; kill switch and step-up missing |
 | E8 | Collections and nudge-bot | **Planned** | Overdue sweep, tone-aware drafts |
 | E9 | Disputes | **Planned** | Ingest, summarise, draft response |
 | E10 | Finance chat and Studio agent | **Planned** | Tool calling, proposals, NL-to-widget |
@@ -75,14 +80,16 @@ flowchart LR
 
     classDef done fill:#dcfce7,stroke:#16a34a,color:#14532d
     classDef todo fill:#fef9c3,stroke:#ca8a04,color:#713f12
-    class Brief,Scope,Draft,Invoice,Paid,Payout,Sent,Nudge todo
+    class Draft,Invoice,Paid,Payout,Sent done
+    class Brief,Scope,Nudge todo
 ```
 
-Status at the time of writing: the **heavy rectangle** of this loop — approval
-queue, invoice creation, webhooks, payout execution — is not yet exposed. The
-PayPal transport and the database schema beneath it are ready, which is why the
-next milestone is the executor plus invoicing (see
-[Project status](../09-project/status-and-roadmap.md)).
+Status at the time of writing: the **billing and payout half of this loop is
+implemented and tested against mock PayPal** — approval queue, invoice create
+and send, paid webhook, split calculation and payout execution. The AI half
+(brief → scope) and the nudge-bot are still planned. Real sandbox verification
+waits on PayPal keys; see [`TODO.md`](../../TODO.md) and
+[Project status](../09-project/status-and-roadmap.md).
 
 ## Scope discipline
 

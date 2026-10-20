@@ -56,8 +56,13 @@ seeded demo user without a token.
 | Models | 7 | Relationships, enum values, money types |
 | Seed | 4 | Idempotency and fixture validation |
 | PayPal client | 33 | Token cache, retries, idempotency, errors, mock |
+| Approvals and executor | 8 | Propose, approve, reject, `409`, audit, failure, ownership |
+| Invoicing | 6 | Create/send, detail, remind, cancel, refresh, duplicate |
+| Payouts | 11 | Split rounding, prepare, execute, both spend caps, dedupe |
+| Webhooks | 5 | Bad signature, dedupe, cancelled/batch/item statuses, malformed body |
 
-Current total: **78 tests**, ~96% statement coverage. `client.py` is 97%.
+Current total: **108 tests**, ~91% statement coverage. `client.py` is 97%;
+the PayPal transport and the split algorithm are fully covered.
 
 ## Patterns
 

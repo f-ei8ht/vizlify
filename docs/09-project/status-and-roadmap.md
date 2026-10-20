@@ -1,93 +1,98 @@
 # Status and roadmap
 
-> [Handbook index](../README.md) · [Part 9](./README.md) · **Status: living document — last updated 2026-10-20**
+> [Handbook index](../README.md) · [Part 9](./README.md) · **Status: living document — last updated 2026-10-21**
 
 This page is the honest snapshot. It is updated when a milestone lands, not on
-a schedule.
+a schedule. The short, actionable version for API keys and next steps is
+[`TODO.md`](../../TODO.md).
 
 ## Done
 
 | Layer | What works | Evidence |
 |-------|------------|----------|
 | Repository | Monorepo, Docker Compose, Dockerfiles, license | `docker compose up` |
-| Data | 12 tables, 3 migrations, enums, seed | `pytest tests/test_models.py`, `test_seed.py` |
-| Config | Env-only settings, mode validation | `test_paypal_client.py` config tests |
+| Data | 12 tables, 4 migrations, enums, seed | `test_models.py`, `test_seed.py` |
+| Config | Env-only settings, mode validation, spend caps | config tests |
 | Auth | Clerk verification, provisioning, dev mode | `test_auth.py` |
 | Domain | Clients, projects, milestones, team CRUD | 20 route tests |
 | PayPal | OAuth cache, retries, idempotency, mock mode | 33 tests, client 97% covered |
-| Frontend | Shell, providers, API client, query hooks | `bun run typecheck` |
-| Docs | This handbook, PayPal setup, ADRs | `docs/` |
+| Approvals | Propose, list, approve, reject, `409`, audit, caps | `test_actions.py` |
+| Invoicing | Create/send, list/detail, remind, cancel, refresh | `test_invoices.py` |
+| Webhooks | Verify, dedupe, invoice/payout/item handlers | `test_webhooks.py` |
+| Payouts | Largest-remainder split, prepare, execute | `test_payouts.py` |
+| Frontend | Shell, providers, API client, money hooks | `bun run typecheck` |
+| Dashboard | `/dashboard`: approvals, invoices, payouts, sandbox banner | Rendered on Docker |
+| Docs | This handbook, judge guide, ADRs | `docs/` |
 
-Run `git log --oneline` for the current history. Commit bodies explain the
-reason for a change and any safety property it affects.
+The full mock loop (milestone → invoice → paid webhook → payout batch) was run
+against Docker on 2026-10-21 and then reset to a clean seed.
+
+**108 backend tests, 91% statement coverage.** Frontend lint and typecheck are
+clean.
 
 ## The schedule gap
 
-The roadmap expected the following by **Tue Oct 20**:
+The roadmap expected this by **Tue Oct 20**:
 
 | Roadmap day | Planned | Actual |
 |-------------|---------|--------|
-| Oct 13 | PayPal client, create and send an invoice | PayPal client ✅, invoice routes ❌ |
-| Oct 14 | Webhooks, signature verification, `INVOICE.PAID` | ❌ |
-| Oct 18 | Invoice UI, approval-queue skeleton, checkpoint 1 | ❌ |
-| Oct 19 | Executor: proposals, locks, idempotency, audit, caps | ❌ (tables exist) |
-| Oct 20 | Split calculation, Payouts batch | ❌ |
+| Oct 13 | PayPal client, create and send an invoice | ✅ (21 Oct) |
+| Oct 14 | Webhooks, signature verification, `INVOICE.PAID` | ✅ (21 Oct) |
+| Oct 18 | Invoice UI, approval-queue skeleton, checkpoint 1 | ❌ API only |
+| Oct 19 | Executor: proposals, locks, idempotency, audit, caps | ✅ (21 Oct) |
+| Oct 20 | Split calculation, Payouts batch | ✅ (21 Oct) |
 
-The foundations took longer than planned; the PayPal **transport** is now
-ahead of where the roadmap expected it, but nothing is exposed through the API
-yet. Checkpoint 1 (create invoice → pay in sandbox → live status) has not been
-reached.
+The **backend money loop is now ahead of the original gap**; the remaining debt
+is the UI, sandbox verification, AI scope and AG Studio. Checkpoint 1 can be
+recorded as soon as sandbox keys are in place.
 
 ## Next milestones
 
 ```mermaid
 flowchart LR
-    A["1 · Executor<br/>proposals, approve/reject,<br/>audit, caps"] --> B["2 · Invoicing<br/>create, send, list,<br/>detail"]
-    B --> C["3 · Webhooks<br/>verify, dedupe,<br/>INVOICE.PAID"]
-    C --> D["4 · Payouts<br/>split maths, batch,<br/>item statuses"]
-    D --> E["5 · LLM scope<br/>mock mode, evals,<br/>brief UI"]
-    E --> F["6 · Deploy<br/>Render, webhook URL,<br/>checkpoint 2"]
+    A["Sandbox<br/>verify with keys"] --> B["One dashboard<br/>queue + invoices + payouts"]
+    B --> C["AI scope<br/>Cerebras + mock + evals"]
+    C --> D["Collections<br/>nudge-bot"]
+    D --> E["AG Studio<br/>Money Board"]
+    E --> F["Deploy<br/>Render + webhook URL"]
 
     classDef now fill:#dcfce7,stroke:#16a34a,color:#14532d
     class A now
 ```
 
-1. **Executor and approval queue** — `pending_actions` service, approve/reject
-   with `409` on double approve, immutable audit writes, spend caps. This is the
-   safety core and the demo's spine; build it before invoices so no money call
-   is ever made outside a proposal.
-2. **Invoicing routes** — generate number, create draft, send, remind, cancel;
-   invoice list/detail API and UI; milestone `done` creates a proposal.
-3. **Webhooks** — signature verification, event store dedupe, `INVOICE.PAID`
-   updates status and queues a payout proposal.
-4. **Payouts** — deterministic split with largest-remainder rounding, batch
-   creation, item statuses, freelancer view.
-5. **AI scope** — Cerebras client, structured output, `LLM_MODE=mock`, eval
+1. **Sandbox verification** — add PayPal keys, tunnel the API, create/pay an
+   invoice, confirm the webhook and payout batch. This is the only way to prove
+   the integration beyond the mock.
+2. **One dashboard screen** — approval queue, invoices and payouts on one page,
+   with approve/reject and the sandbox banner. No AG Studio.
+3. **AI scope** — Cerebras client, `LLM_MODE=mock`, structured output, eval
    harness, brief UI.
-6. **Deployment** — first Render deploy, webhook URL, checkpoint 2 recording.
+4. **Collections** — overdue sweep and tone-aware reminders.
+5. **AG Studio** — three P0 widgets and the Agent Framework (parked by request
+   until the above is done).
+6. **Deployment** — Render, custom domain, webhook URL, checkpoint recording.
 
 ## Known gaps
 
 | Gap | Impact | Status |
 |-----|--------|--------|
-| No approval executor | Money actions cannot flow end to end | Next |
-| No invoice or payout routes | PayPal transport is unreachable from the app | Next |
-| No webhook receiver | Status never updates from PayPal | Next |
-| No LLM client | Brief-to-scope is not implemented | Week 2–3 |
-| No real screens | Demo is API-only | Week 2–3 |
-| No AG Studio | Money Board widget is missing | Week 3 |
-| No CI workflow | Tests are local only | Before deploy |
+| No screens | Demo is API-only | Next |
+| No real sandbox verification | Mock proves logic, not PayPal wiring | Needs keys from you |
+| No LLM client | Brief-to-scope is not implemented | After the screen |
+| No AG Studio | Money Board widget is missing | Parked |
+| No CI workflow | Tests are local only | After the demo path |
 | No frontend tests | Regressions caught manually | After screens |
-| No rate limiting or headers | Hardening incomplete | Week 4 |
+| No rate limiting or headers | Hardening incomplete | Before hosting |
+| Failed actions cannot be retried | A failed proposal stays failed | Later |
 | `docs/apimatic.md` missing | Sponsor evidence incomplete | Before submission |
 
 ## Risks
 
 | Risk | Likelihood | Mitigation |
 |------|------------|------------|
-| PayPal sandbox quirks (payout funding, enabled features) | Medium | Test early; mock mode keeps development unblocked |
-| Webhooks unreachable locally | High | cloudflared tunnel; replay fixtures |
-| AG Studio trial key unavailable | Medium | Dashboard degrades to plain components |
+| PayPal sandbox quirks (payout funding, enabled features) | Medium | Test as soon as keys arrive |
+| Webhooks unreachable locally | High | cloudflared tunnel; mock mode for development |
+| AG Studio trial expires before judging | Medium | Request an extension; keep screenshots |
 | Schedule slip | High | Cut P2, then P1; never cut the approval gate |
 | Frontend scope too large | Medium | Ship the critical path screens only |
 
@@ -96,7 +101,8 @@ flowchart LR
 - Code, tests and docs are in the same pull request.
 - The demo path works from a clean database.
 - `ruff`, `pytest`, `lint` and `typecheck` pass.
-- This page and [Product and scope](../01-overview/product-scope.md) are updated.
+- This page, [Product and scope](../01-overview/product-scope.md) and
+  [`TODO.md`](../../TODO.md) are updated.
 - A judge can run it without reading source code.
 
-Next: [Contributing](./contributing.md) →
+Next: [Judge guide](./judge-guide.md) →

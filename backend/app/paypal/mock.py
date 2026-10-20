@@ -64,7 +64,11 @@ def build_mock_transport() -> httpx.MockTransport:
             return response
 
         if path.startswith("/v2/invoicing/invoices/") and request.method == "POST":
-            return httpx.Response(204)
+            return httpx.Response(200)
+
+        if path.startswith("/v2/invoicing/invoices/") and request.method == "GET":
+            invoice_id = path.rstrip("/").rsplit("/", 1)[-1]
+            return httpx.Response(200, json={"id": invoice_id, "status": "SENT"})
 
         if path == "/v1/payments/payouts" and request.method == "POST":
             batch_id = f"MOCK-BATCH-{next(payout_ids):04d}"

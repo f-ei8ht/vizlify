@@ -1,6 +1,6 @@
 # Judge guide
 
-> [Handbook index](../README.md) · [Part 9](./README.md) · **Status: Scaffolded**
+> [Handbook index](../README.md) · [Part 9](./README.md) · **Status: Implemented (API), Scaffolded (UI)**
 
 A short path through what works today, and an honest map of the intended demo.
 
@@ -38,11 +38,17 @@ Open **http://localhost:3000** and the API docs at
 | Validation | `POST /clients` with an invalid email → `422` envelope |
 | Team share ceiling | Add members totalling over 100% → `409` |
 | Money as strings | Milestone amounts serialize as `"2500.00"` |
+| Approval gate | A proposal can be approved once; a second approve returns `409` |
+| Invoice flow | `PATCH` a milestone to `done`, approve the proposal, then `GET /invoices` |
+| Paid webhook | `POST /webhooks/paypal` with `INVOICING.INVOICE.PAID` queues a payout |
+| Payout split | Approving the payout proposal creates 40/35/25 items that sum to the total |
+| Spend caps | Set a low `PAYOUT_MAX_PER_ACTION` and watch the payout get blocked |
 | PayPal transport | `cd backend && uv run pytest tests/test_paypal_client.py` |
-| Mock PayPal flow | The test suite creates invoices and payouts through the real client |
+| Full suite | `cd backend && uv run pytest` — 108 tests, 91% coverage |
 
-The API is the product surface right now. The Next.js app renders its shell and
-providers but not the dashboard screens yet.
+Open **http://localhost:3000/dashboard** for the Money Board: approve or reject
+proposals, send and sync invoices, and propose/execute payouts. The complete
+mock loop is written out in [`TODO.md`](../../TODO.md).
 
 ## The intended three-minute demo
 
@@ -62,10 +68,10 @@ Steps and their status:
 |------|--------|-------|
 | 1. Paste a brief | Planned | Needs the LLM client and brief UI |
 | 2. Approve the scope | Planned | Needs proposals and the approval queue |
-| 3. Approve the invoice | Planned | Needs invoicing routes and UI |
-| 4. Pay as the sandbox payer | Planned | Needs a sent invoice |
-| 5. Webhook marks it paid | Planned | Needs the webhook receiver |
-| 6. Approve the payout split | Planned | Needs split maths and payout UI |
+| 3. Approve the invoice | **Implemented** | API; UI missing |
+| 4. Pay as the sandbox payer | **Implemented** | Needs sandbox keys for the real payer |
+| 5. Webhook marks it paid | **Implemented** | Signature verification + dedupe |
+| 6. Approve the payout split | **Implemented** | Split maths, batch, item statuses |
 | 7. Time travel to an overdue reminder | Planned | Needs the demo controls |
 
 When the hosted demo is live, the Clerk account and sandbox payer credentials
@@ -75,19 +81,20 @@ will be published here and in the root README. **Never use real accounts.**
 
 | Property | Where to look |
 |----------|---------------|
-| The agent cannot execute | Proposals table and kind enum; executor is a separate path (planned) |
+| The agent cannot execute | `services/executor.py` is reachable only from an approved proposal |
 | Retries cannot duplicate money | `new_request_id` and `PayPal-Request-Id` in `app/paypal/client.py` |
 | PayPal failures are contained | `PayPalError` → `502 integration_error`, raw body never returned |
 | Exact money | `Numeric(12, 2)` and `Decimal`; strings on the wire |
+| Splits add up | Largest-remainder rounding in `services/payouts.py` |
 | No key-free production | `core/config.py` validators |
 | Owner isolation | Every service filters by `owner_id` and returns `404` |
-| Test discipline | 78 tests, ~96% coverage, no network in tests |
+| Test discipline | 106 tests, 91% coverage, no network in tests |
 
 ## Known limits
 
-The payment loop is not yet exposed through HTTP. The transport, schema, auth
-and CRUD are real and tested; invoices, approvals, webhooks and payouts are the
-next milestones. [Project status](./status-and-roadmap.md) lists them in order.
+The money loop is exposed and tested against mock PayPal; the dashboard screens
+and real sandbox verification are next. [Project status](./status-and-roadmap.md)
+and [`TODO.md`](../../TODO.md) list the remaining work.
 
 ## Troubleshooting
 

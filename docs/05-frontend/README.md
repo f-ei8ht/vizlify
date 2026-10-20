@@ -2,8 +2,9 @@
 
 > [Handbook index](../README.md) · **Part 5 of 9**
 
-The frontend is a Next.js 16 App Router application. The shell, providers,
-API client and query layer are implemented. The screens are the next milestone.
+The frontend is a Next.js 16 App Router application. The shell, providers, API
+client, query layer and the `/dashboard` Money Board are implemented. More
+screens are the next milestone.
 
 ## Chapters
 

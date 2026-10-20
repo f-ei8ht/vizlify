@@ -121,7 +121,7 @@ Next.js 16 (App Router, TypeScript, Tailwind, bun), Clerk (authentication), AG S
 
 ## Project status
 
-The repo currently holds the backend data layer, the PayPal transport and the app shells: the monorepo layout, a FastAPI app with SQLAlchemy models and Alembic migrations for the full data model (users, clients, projects, milestones, team, invoices, payouts, approvals, audit log, webhooks, chat) plus a demo seed script, and a Next.js 16 app shell (shadcn/ui, Tailwind v4, dark mode). Auth is done with Clerk on the frontend and verified on the backend, with a gated `dev` mode so the app runs locally without keys. The PayPal client covers OAuth token caching, retries, idempotency and a key-free mock mode; invoicing endpoints and the approval executor are next. AG Studio is integrated later behind a client-only feature flag and needs its own trial key; until then the dashboard renders without it.
+The backend money loop works end to end: approvals and the executor, invoice create/send/remind/cancel, PayPal webhook verification and dedupe, and team payouts with deterministic splits and spend caps. Auth is Clerk on the frontend and verified on the backend, with a gated `dev` mode so the app runs locally without keys. The PayPal transport covers OAuth token caching, retries, idempotency and a key-free mock mode. The Next.js app has a working Money Board at `/dashboard` (approvals, invoices, payouts) on top of typed money query hooks; more screens and AG Studio are next. AG Studio is integrated later behind a client-only feature flag and needs its own trial key. See [`TODO.md`](./TODO.md) for the remaining work and the keys the sandbox needs.
 
 ## Development
 
