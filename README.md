@@ -36,8 +36,8 @@ Every action that moves money or contacts a client becomes a proposal in an appr
 | Tool | How it is used |
 |------|----------------|
 | **AG Studio (AG Grid)** | The Money Board dashboard: custom widgets, theme, and the Studio Agent Framework |
-| **APIMatic** | PayPal Context Plugin used to build the PayPal integration; see `docs/apimatic.md` |
-| **Render** | Hosting, Postgres, Cron Job, and Render Workflows for parallel AI tasks; see `docs/render.md` |
+| **APIMatic** | PayPal Context Plugin used as the integration reference; see the [APIMatic note](./docs/04-backend/paypal-client.md#apimatic-evidence) |
+| **Render** | Hosting, Postgres, Cron Job, and Render Workflows for parallel AI tasks; see [Deployment](./docs/06-operations/deployment.md) |
 
 ## Authentication
 
@@ -65,6 +65,30 @@ For `AUTH_MODE=dev` set `DEV_USER_EMAIL` to the demo account email. All of these
 
 Frontend env: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, and the sign-in/up URLs.
 
+## PayPal
+
+`PAYPAL_MODE` picks the transport: `mock` (default, in-process fake, no keys), `sandbox`, or `live` (refused outside production). The client caches OAuth tokens, refreshes them before expiry, retries `429`/`5xx` with backoff, and sends a deterministic `PayPal-Request-Id` on every write so retries cannot duplicate an invoice or payout.
+
+```env
+PAYPAL_MODE=sandbox
+PAYPAL_CLIENT_ID=...
+PAYPAL_CLIENT_SECRET=...
+PAYPAL_WEBHOOK_ID=...
+```
+
+See [the PayPal chapter](./docs/04-backend/paypal-client.md) for the sandbox setup and the full behaviour.
+
+## Documentation
+
+The project handbook starts at [`docs/README.md`](./docs/README.md). It covers the product, architecture (with Mermaid diagrams), the domain API, the database, the PayPal client, the frontend data layer, operations, architecture decisions and a reference section.
+
+Good entry points:
+
+- [What is Vizlify?](./docs/01-overview/what-is-vizlify.md) — the problem and the safety promise.
+- [Architecture](./docs/03-architecture/system-overview.md) — components and boundaries.
+- [API endpoints](./docs/08-reference/api-endpoints.md) — implemented and planned routes.
+- [Project status](./docs/09-project/status-and-roadmap.md) — what is done and what is next.
+
 ## Quick start (about 5 minutes, no API keys needed)
 
 Requires Docker.
@@ -89,7 +113,7 @@ The hosted demo runs on a free-tier host, so the **first request after idle can 
 | Hosted Clerk demo account | `<clerk demo email>` / `<password>` *(replace)* |
 | PayPal sandbox payer (to pay an invoice) | `<sandbox personal email>` / `<password>` *(replace)* |
 | LLM | `LLM_MODE=mock` is deterministic and needs no key. Set `LLM_MODE=live` with a Cerebras key for the real agent |
-| Walkthrough | 1) Paste the sample brief. 2) Approve the proposed invoice. 3) Pay it as the sandbox payer. 4) Approve the payout split. 5) Click "time travel" to see the nudge-bot. See `docs/judge-guide.md` |
+| Walkthrough | 1) Paste the sample brief. 2) Approve the proposed invoice. 3) Pay it as the sandbox payer. 4) Approve the payout split. 5) Click "time travel" to see the nudge-bot. See the [judge guide](./docs/09-project/judge-guide.md) |
 
 ## Tech stack
 
@@ -97,7 +121,7 @@ Next.js 16 (App Router, TypeScript, Tailwind, bun), Clerk (authentication), AG S
 
 ## Project status
 
-The repo currently holds the backend data layer and the app shells: the monorepo layout, a FastAPI app with SQLAlchemy models and Alembic migrations for the full data model (users, clients, projects, milestones, team, invoices, payouts, approvals, audit log, webhooks, chat) plus a demo seed script, and a Next.js 16 app shell (shadcn/ui, Tailwind v4, dark mode). Auth is done with Clerk on the frontend and verified on the backend, with a gated `dev` mode so the app runs locally without keys. AG Studio is integrated later behind a client-only feature flag and needs its own trial key; until then the dashboard renders without it.
+The repo currently holds the backend data layer, the PayPal transport and the app shells: the monorepo layout, a FastAPI app with SQLAlchemy models and Alembic migrations for the full data model (users, clients, projects, milestones, team, invoices, payouts, approvals, audit log, webhooks, chat) plus a demo seed script, and a Next.js 16 app shell (shadcn/ui, Tailwind v4, dark mode). Auth is done with Clerk on the frontend and verified on the backend, with a gated `dev` mode so the app runs locally without keys. The PayPal client covers OAuth token caching, retries, idempotency and a key-free mock mode; invoicing endpoints and the approval executor are next. AG Studio is integrated later behind a client-only feature flag and needs its own trial key; until then the dashboard renders without it.
 
 ## Development
 
@@ -131,11 +155,11 @@ bun run lint && bun run typecheck
 
 ## Licensing
 
-Vizlify's code is MIT licensed. **AG Studio is a commercial product** under its own license and is not covered by the MIT license; you need your own AG Studio key to run the full dashboard. See [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md).
+Vizlify's code is MIT licensed. **AG Studio is a commercial product** under its own license and is not covered by the MIT license; you need your own AG Studio key to run the full dashboard. See [License and notices](./docs/09-project/license-and-notices.md).
 
 ## Contributing and security
 
-Contributions are welcome: see [CONTRIBUTING.md](./CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md). Report vulnerabilities as described in [SECURITY.md](./SECURITY.md).
+Contributions are welcome: see [Contributing](./docs/09-project/contributing.md). Report vulnerabilities privately through GitHub's security advisories; see [Security](./docs/06-operations/security.md).
 
 ## Disclaimer
 

@@ -1,3 +1,6 @@
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -8,7 +11,17 @@ from app.api.projects import router as projects_router
 from app.api.team import router as team_router
 from app.core.config import settings
 from app.core.errors import register_exception_handlers
+from app.paypal import build_client
 from app.schemas.response import ApiResponse, success
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    app.state.paypal = build_client(settings)
+    try:
+        yield
+    finally:
+        await app.state.paypal.aclose()
 
 
 def create_app() -> FastAPI:
@@ -16,6 +29,7 @@ def create_app() -> FastAPI:
         title="Vizlify API",
         version="0.1.0",
         summary="An AI agent that proposes; a human approves; PayPal executes.",
+        lifespan=lifespan,
     )
 
     app.add_middleware(

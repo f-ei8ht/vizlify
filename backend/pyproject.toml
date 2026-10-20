@@ -10,6 +10,7 @@ dependencies = [
     "clerk-backend-api>=7.0.0",
     "email-validator>=2.3.0",
     "fastapi>=0.143",
+    "httpx>=0.28",
     "pydantic-settings>=2.16",
     "sqlalchemy[asyncio]>=2.1",
     "uvicorn[standard]>=0.54",
@@ -18,7 +19,6 @@ dependencies = [
 [dependency-groups]
 dev = [
     "aiosqlite>=0.22",
-    "httpx>=0.28",
     "pytest>=9",
     "pytest-asyncio>=1.4",
     "pytest-cov>=7",

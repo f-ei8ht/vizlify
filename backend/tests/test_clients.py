@@ -51,6 +51,16 @@ async def test_delete_client(seeded_client: AsyncClient) -> None:
     assert missing.status_code == 404
 
 
+async def test_deleting_a_client_deletes_its_projects(seeded_client: AsyncClient) -> None:
+    project = (await seeded_client.get("/projects")).json()["data"][0]
+
+    deleted = await seeded_client.delete(f"/clients/{project['client_id']}")
+    missing = await seeded_client.get(f"/projects/{project['id']}")
+
+    assert deleted.status_code == 200
+    assert missing.status_code == 404
+
+
 async def test_missing_client_uses_error_envelope(seeded_client: AsyncClient) -> None:
     response = await seeded_client.get(f"/clients/{uuid4()}")
 

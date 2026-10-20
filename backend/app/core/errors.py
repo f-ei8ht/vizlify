@@ -16,6 +16,7 @@ class ErrorCode(StrEnum):
     CONFLICT = "conflict"
     VALIDATION_ERROR = "validation_error"
     RATE_LIMITED = "rate_limited"
+    INTEGRATION_ERROR = "integration_error"
     INTERNAL_ERROR = "internal_error"
 
 
@@ -27,6 +28,7 @@ _STATUS_BY_CODE: dict[ErrorCode, int] = {
     ErrorCode.CONFLICT: 409,
     ErrorCode.VALIDATION_ERROR: 422,
     ErrorCode.RATE_LIMITED: 429,
+    ErrorCode.INTEGRATION_ERROR: 502,
     ErrorCode.INTERNAL_ERROR: 500,
 }
 
@@ -36,9 +38,10 @@ _CODE_BY_STATUS: dict[int, ErrorCode] = {status: code for code, status in _STATU
 class AppError(Exception):
     code: ErrorCode = ErrorCode.BAD_REQUEST
 
-    def __init__(self, message: str) -> None:
+    def __init__(self, message: str, details: list[dict] | None = None) -> None:
         super().__init__(message)
         self.message = message
+        self.details = details
 
 
 class NotFoundError(AppError):
@@ -63,7 +66,7 @@ def _envelope(
 
 
 async def _handle_app_error(request: Request, exc: AppError) -> JSONResponse:
-    return _envelope(exc.code, exc.message)
+    return _envelope(exc.code, exc.message, exc.details)
 
 
 async def _handle_http_error(request: Request, exc: HTTPException) -> JSONResponse:

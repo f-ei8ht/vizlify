@@ -1041,6 +1041,7 @@ dependencies = [
     { name = "clerk-backend-api" },
     { name = "email-validator" },
     { name = "fastapi" },
+    { name = "httpx" },
     { name = "pydantic-settings" },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "uvicorn", extra = ["standard"] },
@@ -1049,7 +1050,6 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "aiosqlite" },
-    { name = "httpx" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
@@ -1063,6 +1063,7 @@ requires-dist = [
     { name = "clerk-backend-api", specifier = ">=7.0.0" },
     { name = "email-validator", specifier = ">=2.3.0" },
     { name = "fastapi", specifier = ">=0.143" },
+    { name = "httpx", specifier = ">=0.28" },
     { name = "pydantic-settings", specifier = ">=2.16" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.1" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.54" },
@@ -1071,7 +1072,6 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "aiosqlite", specifier = ">=0.22" },
-    { name = "httpx", specifier = ">=0.28" },
     { name = "pytest", specifier = ">=9" },
     { name = "pytest-asyncio", specifier = ">=1.4" },
     { name = "pytest-cov", specifier = ">=7" },

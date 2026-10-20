@@ -22,6 +22,14 @@ class Settings(BaseSettings):
     CLERK_JWT_KEY: str | None = None
     CLERK_AUTHORIZED_PARTIES: str | None = None
 
+    # PayPal. mock never calls PayPal and needs no keys; sandbox and live do.
+    PAYPAL_MODE: Literal["mock", "sandbox", "live"] = "mock"
+    PAYPAL_CLIENT_ID: str | None = None
+    PAYPAL_CLIENT_SECRET: str | None = None
+    PAYPAL_WEBHOOK_ID: str | None = None
+    PAYPAL_TIMEOUT_SECONDS: float = 15.0
+    PAYPAL_MAX_RETRIES: int = 2
+
     LLM_MODE: str
     DEMO_MODE: bool
     JOBS_MODE: str
@@ -33,6 +41,13 @@ class Settings(BaseSettings):
     @property
     def clerk_authorized_parties(self) -> list[str]:
         return self._split(self.CLERK_AUTHORIZED_PARTIES)
+
+    @property
+    def paypal_base_url(self) -> str:
+        """Derived from the mode so a typo cannot point live mode at the sandbox."""
+        if self.PAYPAL_MODE == "live":
+            return "https://api-m.paypal.com"
+        return "https://api-m.sandbox.paypal.com"
 
     @model_validator(mode="after")
     def _require_mode_configuration(self) -> Settings:
@@ -46,6 +61,21 @@ class Settings(BaseSettings):
                 raise ValueError("CLERK_SECRET_KEY is required when AUTH_MODE=clerk.")
             if not self.CLERK_AUTHORIZED_PARTIES:
                 raise ValueError("CLERK_AUTHORIZED_PARTIES is required when AUTH_MODE=clerk.")
+
+        if self.PAYPAL_MODE == "mock":
+            if self.APP_ENV == "production":
+                raise ValueError("PAYPAL_MODE=mock is not allowed when APP_ENV=production.")
+        elif self.PAYPAL_MODE == "live" and self.APP_ENV != "production":
+            raise ValueError("PAYPAL_MODE=live is only allowed when APP_ENV=production.")
+        elif not (self.PAYPAL_CLIENT_ID and self.PAYPAL_CLIENT_SECRET):
+            raise ValueError(
+                "PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET are required "
+                "when PAYPAL_MODE is not mock."
+            )
+        if self.PAYPAL_TIMEOUT_SECONDS <= 0:
+            raise ValueError("PAYPAL_TIMEOUT_SECONDS must be greater than zero.")
+        if self.PAYPAL_MAX_RETRIES < 0:
+            raise ValueError("PAYPAL_MAX_RETRIES cannot be negative.")
         return self
 
     @staticmethod

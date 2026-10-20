@@ -27,4 +27,6 @@ class Client(TimestampMixin, Base):
     )
 
     owner: Mapped[User] = relationship(back_populates="clients")
-    projects: Mapped[list[Project]] = relationship(back_populates="client")
+    projects: Mapped[list[Project]] = relationship(
+        back_populates="client", cascade="all, delete-orphan"
+    )
